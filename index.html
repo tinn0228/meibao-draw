@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>美業運勢抽卡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 版面：單欄置中；五張牌排成一列（手機 3+2），翻牌後依序顯示結果、分享圖、即時統計、上架引導。沿用美寶官網的暖白底、黑色膠囊與桃粉色 */
+:root{
+  --bg:#F7F6F2; --card:#FFFFFF; --ink:#141414; --ink-soft:#5E5A5C; --line:#141414;
+  --pink:#FF3AB1; --pink-ink:#FFFFFF; --pink-soft:#FFDCF0; --lilac:#E9DBFF; --muted:#ECEAE4;
+  --green:#3CCB95; --green-ink:#0F2A20; --green-soft:#D6F5E7; --purple:#8B5CF6; --purple-ink:#FFFFFF; --purple-soft:#E9DBFF;
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151316; --card:#211E23; --ink:#F6F3F4; --ink-soft:#B5AEB2; --line:#F6F3F4;
+    --pink:#FF5CC0; --pink-ink:#141414; --pink-soft:#4A1E3D; --lilac:#352A4C; --muted:#2C282E; color-scheme:dark;
+    --green:#4FD9A4; --green-ink:#0F2A20; --green-soft:#1E4033; --purple:#A585FF; --purple-ink:#141414; --purple-soft:#352A4C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151316; --card:#211E23; --ink:#F6F3F4; --ink-soft:#B5AEB2; --line:#F6F3F4;
+  --pink:#FF5CC0; --pink-ink:#141414; --pink-soft:#4A1E3D; --lilac:#352A4C; --muted:#2C282E; color-scheme:dark;
+  --green:#4FD9A4; --green-ink:#0F2A20; --green-soft:#1E4033; --purple:#A585FF; --purple-ink:#141414; --purple-soft:#352A4C;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;
+  padding-inline:16px;padding-block:20px 48px;position:relative;overflow-x:hidden}
+body::before,body::after{content:"";position:absolute;z-index:0;border-radius:50%;filter:blur(70px);opacity:.75;pointer-events:none}
+body::before{width:320px;height:320px;background:var(--pink-soft);top:-80px;left:-100px}
+body::after{width:300px;height:300px;background:var(--lilac);top:60px;right:0}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+button,a{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:22px;text-decoration:none;color:var(--ink)}
+.logo i{font-style:normal;background:var(--pink);color:var(--pink-ink);border-radius:999px;padding:2px 14px;font-size:20px}
+.badge{font-size:13px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--card)}
+h1{margin:4px 0 0;font-size:clamp(26px,6.5vw,38px);line-height:1.25;font-weight:900;text-wrap:balance}
+h1 em{font-style:normal;color:var(--pink)}
+.lead{margin:0;color:var(--ink-soft);max-width:34em}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:22px 18px}
+.panel h2{margin:0 0 4px;font-size:21px;font-weight:900}
+.hint{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
+
+.deck{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(min-width:620px){.deck{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.t-pink{--cc:var(--pink);--cc-ink:var(--pink-ink);--cc-soft:var(--pink-soft)}
+.t-green{--cc:var(--green);--cc-ink:var(--green-ink);--cc-soft:var(--green-soft)}
+.t-purple{--cc:var(--purple);--cc-ink:var(--purple-ink);--cc-soft:var(--purple-soft)}
+.tarot{perspective:900px;border:0;background:none;padding:0;cursor:pointer;aspect-ratio:3/4;display:block;width:100%}
+.tarot .in{display:block;position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.tarot.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border:1.5px solid var(--line);border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden}
+.back{background:var(--cc);color:var(--cc-ink)}
+.back::before{content:"";position:absolute;inset:8px;border:1.5px dashed currentColor;border-radius:12px;opacity:.55}
+.back b{font-size:20px;font-weight:900;letter-spacing:.03em}
+.back span{font-size:34px;font-weight:900;line-height:1}
+.front{background:var(--card);transform:rotateY(180deg);text-align:center;padding:8px}
+.front b{font-size:26px;font-weight:900}
+.front small{font-size:12px;color:var(--ink-soft)}
+.tarot:not(.flip):not([disabled]):hover .in{transform:translateY(-4px)}
+.tarot[disabled]{cursor:default}
+.tarot.dim{opacity:.35}
+.tarot.pick .front{background:var(--cc-soft)}
+@media(prefers-reduced-motion:reduce){.tarot .in{transition:none}}
+
+.result{display:flex;flex-direction:column;gap:12px}
+.result[hidden]{display:none}
+.stars{display:flex;gap:3px}
+.stars svg{width:22px;height:22px}
+.rtitle{margin:0;font-size:28px;font-weight:900;line-height:1.25}
+.rcat{align-self:flex-start;background:var(--cc,var(--pink));color:var(--cc-ink,var(--pink-ink));border-radius:999px;padding:2px 14px;font-weight:700;font-size:14px}
+.rline{margin:0;font-size:17px}
+.facts{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0}
+@media(min-width:520px){.facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fact{background:var(--bg);border:1.5px solid var(--line);border-radius:16px;padding:10px 14px}
+.fact dt{font-size:12px;color:var(--ink-soft);font-weight:700}
+.fact dd{margin:0;font-weight:700}
+.share-img{width:100%;max-width:340px;aspect-ratio:4/5;border-radius:18px;border:1.5px solid var(--line);background:var(--muted);display:block}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:10px 24px;font-weight:700;cursor:pointer;text-decoration:none;color:var(--ink);display:inline-block;text-align:center}
+.btn.main{background:var(--pink);color:var(--pink-ink);border-color:var(--pink)}
+.linkish{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:var(--ink-soft);font-size:13px}
+.note{font-size:13px;color:var(--ink-soft);margin:0}
+.toast{font-size:13px;font-weight:700;color:var(--pink);min-height:1.4em}
+
+.bars{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.bar{display:grid;grid-template-columns:3.2em minmax(0,1fr) 3em;gap:10px;align-items:center;font-variant-numeric:tabular-nums}
+.bar span:first-child{font-weight:700}
+.bar .track{height:14px;border-radius:999px;background:var(--muted);overflow:hidden}
+.bar .fill{height:100%;background:var(--cc);border-radius:999px;transition:width .5s}
+.bar .n{text-align:right;color:var(--ink-soft);font-size:14px}
+.pill{display:inline-block;font-size:12px;font-weight:700;border:1.5px solid var(--line);border-radius:999px;padding:1px 10px;margin-left:8px;vertical-align:middle;background:var(--bg)}
+.pill.live{background:var(--pink);color:var(--pink-ink);border-color:var(--pink)}
+
+.share{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:18px}
+.share .qr{width:128px;height:128px;flex:none;background:#fff;border-radius:12px;padding:6px;border:1.5px solid var(--line)}
+.share .qr svg{display:block;width:100%;height:100%}
+.share-t{flex:1;min-width:200px}
+.share-t strong{display:block;font-size:18px;font-weight:900}
+.share-t p{margin:2px 0 10px;color:var(--ink-soft);font-size:14px}
+.foot{font-size:12.5px;color:var(--ink-soft);text-align:center;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="https://meibao.com.tw/" target="_blank" rel="noopener"><i>Meibao</i>美寶</a>
+    <span class="badge">每日一抽</span>
+  </header>
+  <div>
+    <h1>今天適合做哪一項？<em>抽張牌</em>看看</h1>
+    <p class="lead">選一張牌，翻開今日美業運勢和推薦項目，還能下載成分享圖。每人每天一抽。</p>
+  </div>
+
+  <section class="panel" aria-labelledby="deckT">
+    <h2 id="deckT">選一張牌</h2>
+    <p class="hint" id="deckHint">牌的順序每次都不同，憑直覺挑一張。</p>
+    <div class="deck" id="deck"></div>
+  </section>
+
+  <section class="panel result" id="result" hidden aria-live="polite">
+    <span class="rcat" id="rCat"></span>
+    <div class="stars" id="rStars" role="img"></div>
+    <h2 class="rtitle" id="rTitle"></h2>
+    <p class="rline" id="rLine"></p>
+    <dl class="facts">
+      <div class="fact"><dt>今日建議</dt><dd id="rTip"></dd></div>
+      <div class="fact"><dt>幸運色</dt><dd id="rColor"></dd></div>
+      <div class="fact"><dt>好時段</dt><dd id="rTime"></dd></div>
+    </dl>
+    <img class="share-img" id="shareImg" alt="今日運勢分享圖">
+    <div class="actions">
+      <button class="btn main" id="dlBtn" type="button">下載分享圖</button>
+      <a class="btn" id="goBtn" href="https://meibao.com.tw/" target="_blank" rel="noopener">去美寶找店家</a>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <p class="note" id="doneNote"></p>
+    <button class="linkish" id="redo" type="button" hidden>示範用：重新抽一次（不計入統計）</button>
+  </section>
+
+  <section class="panel" aria-labelledby="stT">
+    <h2 id="stT">大家最近抽到什麼<span class="pill" id="stPill">讀取中</span></h2>
+    <p class="hint" id="stHint">最近 7 天各項目被抽到的次數。</p>
+    <ul class="bars" id="bars"></ul>
+  </section>
+
+  <section class="share" aria-label="到美寶上架店家">
+    <div class="qr" id="qrBox" role="img" aria-label="美寶網站 QR code"></div>
+    <div class="share-t">
+      <strong>你是店家？到美寶上架店家，獲得一頁式網站</strong>
+      <p>掃描 QR code，或前往 meibao.com.tw，把你的店家上架到美寶。</p>
+      <a class="btn main" href="https://meibao.com.tw/" target="_blank" rel="noopener">前往美寶上架店家</a>
+    </div>
+  </section>
+  <p class="foot">運勢內容僅供娛樂參考。抽牌紀錄只記錄抽到的項目，不收集任何個人資料。</p>
+</div>
+
+<script>
+var SITE = "https://meibao.com.tw/";
+var SB_URL = "https://uhbjwirxsfisizzpysve.supabase.co";
+var SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoYmp3aXJ4c2Zpc2l6enB5c3ZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5OTMzNDgsImV4cCI6MjEwNjU2OTM0OH0.sO35kgJQJFOd8d9FVBCPnSc34XWIBlodh0vJq2_sDnw";
+function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* ---------- QR code（版本 2-M，純 JS） ---------- */
+var QR=(function(){
+  var EXP=[],LOG=[];
+  (function(){ var x=1; for(var i=0;i<255;i++){ EXP[i]=x; LOG[x]=i; x<<=1; if(x&256) x^=0x11D; } for(var j=255;j<512;j++) EXP[j]=EXP[j-255]; })();
+  function mul(a,b){ return (a===0||b===0)?0:EXP[LOG[a]+LOG[b]]; }
+  function rsGen(n){ var g=[1]; for(var i=0;i<n;i++){ var ng=new Array(g.length+1).fill(0); for(var j=0;j<g.length;j++){ ng[j]^=g[j]; ng[j+1]^=mul(g[j],EXP[i]); } g=ng; } return g; }
+  function rsEc(data,n){ var g=rsGen(n),r=new Array(n).fill(0); data.forEach(function(b){ var f=b^r[0]; r.shift(); r.push(0); for(var i=0;i<n;i++) r[i]^=mul(g[i+1],f); }); return r; }
+  function make(text){
+    var size=25,DATA=28,ECN=16,data=Array.prototype.slice.call(new TextEncoder().encode(text));
+    if(data.length>26) throw new Error("text too long");
+    var bits=[]; function put(v,n){ for(var i=n-1;i>=0;i--) bits.push((v>>i)&1); }
+    put(4,4); put(data.length,8); data.forEach(function(b){ put(b,8); });
+    for(var t=0;t<4&&bits.length<DATA*8;t++) bits.push(0);
+    while(bits.length%8) bits.push(0);
+    for(var p=0xEC;bits.length<DATA*8;p=p===0xEC?0x11:0xEC) put(p,8);
+    var cw=[]; for(var i=0;i<bits.length;i+=8){ var v=0; for(var k=0;k<8;k++) v=(v<<1)|bits[i+k]; cw.push(v); }
+    cw=cw.concat(rsEc(cw,ECN));
+    var all=[]; cw.forEach(function(b){ for(var i=7;i>=0;i--) all.push((b>>i)&1); });
+    var m=[],fn=[]; for(var y=0;y<size;y++){ m.push(new Array(size).fill(false)); fn.push(new Array(size).fill(false)); }
+    function setF(x,y,v){ if(x<0||y<0||x>=size||y>=size) return; m[y][x]=v; fn[y][x]=true; }
+    function finder(cx,cy){ for(var dy=-4;dy<=4;dy++) for(var dx=-4;dx<=4;dx++){ var d=Math.max(Math.abs(dx),Math.abs(dy)); setF(cx+dx,cy+dy,d!==4&&d!==2); } }
+    finder(3,3); finder(size-4,3); finder(3,size-4);
+    for(var a=0;a<size;a++){ if(!fn[6][a]) setF(a,6,a%2===0); if(!fn[a][6]) setF(6,a,a%2===0); }
+    for(var ay=-2;ay<=2;ay++) for(var ax=-2;ax<=2;ax++) setF(18+ax,18+ay,Math.max(Math.abs(ax),Math.abs(ay))!==1);
+    function format(mask){
+      var d=mask,r=d; for(var i=0;i<10;i++) r=(r<<1)^((r>>9)*0x537);
+      var f=((d<<10)|r)^0x5412; function g(i){ return ((f>>i)&1)===1; }
+      for(var i2=0;i2<=5;i2++) setF(8,i2,g(i2)); setF(8,7,g(6)); setF(8,8,g(7)); setF(7,8,g(8));
+      for(var i3=9;i3<15;i3++) setF(14-i3,8,g(i3));
+      for(var i4=0;i4<8;i4++) setF(size-1-i4,8,g(i4));
+      for(var i5=8;i5<15;i5++) setF(8,size-15+i5,g(i5));
+      setF(8,size-8,true);
+    }
+    format(0);
+    var idx=0;
+    for(var right=size-1;right>=1;right-=2){
+      if(right===6) right=5;
+      for(var vert=0;vert<size;vert++) for(var j=0;j<2;j++){
+        var x=right-j,up=((right+1)&2)===0,y=up?size-1-vert:vert;
+        if(!fn[y][x]&&idx<all.length){ m[y][x]=all[idx]===1; idx++; }
+      }
+    }
+    function maskFn(k,x,y){ switch(k){
+      case 0:return (x+y)%2===0; case 1:return y%2===0; case 2:return x%3===0; case 3:return (x+y)%3===0;
+      case 4:return (Math.floor(x/3)+Math.floor(y/2))%2===0; case 5:return x*y%2+x*y%3===0;
+      case 6:return (x*y%2+x*y%3)%2===0; default:return ((x+y)%2+x*y%3)%2===0; } }
+    function applyMask(k){ for(var y=0;y<size;y++) for(var x=0;x<size;x++) if(!fn[y][x]&&maskFn(k,x,y)) m[y][x]=!m[y][x]; }
+    function penalty(){
+      var s=0,y,x,run,i;
+      for(y=0;y<size;y++){ run=1; for(x=1;x<size;x++){ if(m[y][x]===m[y][x-1]){ run++; if(run===5) s+=3; else if(run>5) s++; } else run=1; } }
+      for(x=0;x<size;x++){ run=1; for(y=1;y<size;y++){ if(m[y][x]===m[y-1][x]){ run++; if(run===5) s+=3; else if(run>5) s++; } else run=1; } }
+      for(y=0;y<size-1;y++) for(x=0;x<size-1;x++){ var c=m[y][x]; if(c===m[y][x+1]&&c===m[y+1][x]&&c===m[y+1][x+1]) s+=3; }
+      var dark=0; for(y=0;y<size;y++) for(i=0;i<size;i++) if(m[y][i]) dark++;
+      s+=Math.floor(Math.abs(dark*20-size*size*10)/(size*size))*10;
+      return s;
+    }
+    var best=0,bestP=1e9;
+    for(var k=0;k<8;k++){ applyMask(k); format(k); var pp=penalty(); if(pp<bestP){ bestP=pp; best=k; } applyMask(k); }
+    applyMask(best); format(best);
+    return m;
+  }
+  function svg(text){
+    var m=make(text),n=m.length,q=4,d="";
+    for(var y=0;y<n;y++) for(var x=0;x<n;x++) if(m[y][x]) d+="M"+(x+q)+" "+(y+q)+"h1v1h-1z";
+    var s=n+q*2;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+s+' '+s+'" shape-rendering="crispEdges"><rect width="'+s+'" height="'+s+'" fill="#fff"/><path d="'+d+'" fill="#141414"/></svg>';
+  }
+  return {make:make,svg:svg};
+})();
+try{ document.getElementById("qrBox").innerHTML=QR.svg(SITE); }catch(e){ document.getElementById("qrBox").textContent="meibao.com.tw"; }
+
+/* ---------- 牌組與結果 ---------- */
+var CARDS=[{k:"nail",n:"美甲",c:"pink"},{k:"lash",n:"美睫",c:"green"},{k:"tattoo",n:"紋繡",c:"purple"},{k:"hair",n:"美髮",c:"pink"},{k:"skin",n:"護膚",c:"green"},{k:"massage",n:"按摩",c:"purple"}];
+var HEX={pink:["#FF3AB1","#FFFFFF"],green:["#3CCB95","#0F2A20"],purple:["#8B5CF6","#FFFFFF"]};
+function colorOf(k){ return CARDS.filter(function(c){ return c.k===k; })[0].c; }
+var RES={
+ nail:[
+  {r:"nail1",s:5,t:"指尖有好事",l:"今天適合為自己換一組新顏色，好心情會從指尖開始。",tip:"挑一個平常不敢試的顏色",c:"櫻花粉",tm:"下午 3 點"},
+  {r:"nail2",s:4,t:"簡單就是美",l:"乾淨的裸色系，最襯你今天的氣場。",tip:"日系簡約款，百搭又耐看",c:"奶茶裸",tm:"上午 11 點"},
+  {r:"nail3",s:3,t:"慢慢來比較快",l:"今天不用趕，約一個安靜的時段，好好把指甲做完。",tip:"避開下班尖峰，選平日下午",c:"霧灰藍",tm:"平日午後"},
+  {r:"nail4",s:4,t:"靈感乍現",l:"適合嘗試手繪或貓眼，連設計師都會被你的點子啟發。",tip:"帶一張喜歡的參考圖去",c:"香檳金",tm:"晚上 7 點"}],
+ lash:[
+  {r:"lash1",s:5,t:"眼神會說話",l:"今天的你適合讓眼神加分，一個弧度就能改變整張臉的印象。",tip:"跟老師討論適合眼型的弧度",c:"焦糖棕",tm:"下午 2 點"},
+  {r:"lash2",s:4,t:"自然最迷人",l:"輕輕刷上就好，自然的睫毛線條最耐看。",tip:"選細緻的單根嫁接",c:"米白",tm:"上午 10 點"},
+  {r:"lash3",s:3,t:"小小改變",l:"不必一次大改造，先從稍微加長一點開始。",tip:"第一次做，先要求自然款",c:"薰衣草紫",tm:"傍晚 5 點"},
+  {r:"lash4",s:5,t:"桃花運上升",l:"最近適合約會與見面，提前整理好眼妝，自信滿分。",tip:"重要場合前三天預約",c:"玫瑰粉",tm:"週末午後"}],
+ tattoo:[
+  {r:"tattoo1",s:4,t:"眉眼有神",l:"想讓五官更立體，先看看喜歡的眉形與老師的作品風格。",tip:"先收集三張喜歡的眉形",c:"深棕",tm:"上午 10 點"},
+  {r:"tattoo2",s:3,t:"先諮詢再決定",l:"好的紋繡從溝通開始，今天適合先做功課，不急著下手。",tip:"問清楚流程與術後照顧",c:"燕麥色",tm:"下午 4 點"},
+  {r:"tattoo3",s:4,t:"長期投資",l:"挑一位作品風格你喜歡的老師，比急著做更重要。",tip:"多看作品集與評價",c:"墨綠",tm:"平日白天"},
+  {r:"tattoo4",s:5,t:"穩穩的好運",l:"耐心會帶來好結果，今天很適合預約一次免費諮詢。",tip:"帶著素顏去諮詢",c:"暖杏色",tm:"週五下午"}],
+ hair:[
+  {r:"hair1",s:5,t:"換個髮型換個運",l:"想換心情就換髮型，今天的決定通常不會後悔。",tip:"和設計師聊聊你想要的感覺",c:"蜜糖棕",tm:"下午 1 點"},
+  {r:"hair2",s:4,t:"剪去煩惱",l:"剪掉分岔和舊想法，整個人都輕盈起來。",tip:"修個層次，輕盈有型",c:"霧黑",tm:"上午 11 點"},
+  {r:"hair3",s:3,t:"護髮日",l:"頭髮今天需要休息，給它一次好好的保養。",tip:"安排一次深層護理",c:"奶油白",tm:"傍晚 6 點"},
+  {r:"hair4",s:4,t:"新造型登場",l:"適合嘗試沒做過的造型，朋友會先注意到你的變化。",tip:"先從瀏海或髮尾小改變開始",c:"酒紅",tm:"週末上午"}],
+ skin:[
+  {r:"skin1",s:4,t:"放鬆好氣色",l:"今天適合讓自己慢下來，好好犒賞自己一次。",tip:"預約一段不被打擾的時間",c:"珍珠白",tm:"下午 3 點"},
+  {r:"skin2",s:3,t:"慢活保養",l:"保養不用急，穩定的小習慣比一次的大動作更有感。",tip:"先和美容師聊你的日常作息",c:"淺杏",tm:"平日晚上"},
+  {r:"skin3",s:5,t:"放鬆充電",l:"忙了一陣子，今天很適合替自己充電。",tip:"選有按摩放鬆的療程",c:"薄荷綠",tm:"週末午後"},
+  {r:"skin4",s:4,t:"重整步調",l:"重新安排生活節奏，從照顧自己開始。",tip:"把保養排進行事曆",c:"淡紫",tm:"晚上 8 點"}],
+ massage:[
+  {r:"massage1",s:5,t:"放下肩上的事",l:"今天值得讓自己整個人鬆下來，把忙碌留在門外。",tip:"預約一段完整不趕的時間",c:"燕麥色",tm:"傍晚 6 點"},
+  {r:"massage2",s:4,t:"慢慢呼吸",l:"節奏放慢一點，好心情會跟著跑出來。",tip:"選你喜歡的香氣與力道",c:"薄荷綠",tm:"晚上 8 點"},
+  {r:"massage3",s:3,t:"小小犒賞",l:"不用大陣仗，三十分鐘的放鬆就很夠。",tip:"先從短時間的療程開始",c:"淺杏",tm:"平日午後"},
+  {r:"massage4",s:5,t:"充電時刻",l:"這個週末很適合安排一次放鬆，替下週備好力氣。",tip:"和朋友一起預約更開心",c:"薰衣草紫",tm:"週末上午"}]
+};
+function nameOf(k){ return CARDS.filter(function(c){ return c.k===k; })[0].n; }
+function find(card,rk){ var l=RES[card]; for(var i=0;i<l.length;i++) if(l[i].r===rk) return l[i]; return l[0]; }
+function today(){ var d=new Date(); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function starSvg(on){ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6.9 7.5.7-5.7 5 1.7 7.4L12 18l-6.5 4 1.7-7.4-5.7-5 7.5-.7z" fill="'+(on?'var(--pink)':'none')+'" stroke="var(--line)" stroke-width="1.5" stroke-linejoin="round"/></svg>'; }
+
+/* ---------- 抽牌流程 ---------- */
+function mixedOrder(){
+  var o; for(var t=0;t<80;t++){ o=shuffle(CARDS); var ok=true; for(var i=0;i<o.length;i++){ if(i+1<o.length&&o[i].c===o[i+1].c) ok=false; if(i+3<o.length&&o[i].c===o[i+3].c) ok=false; } if(ok) return o; }
+  return o;
+}
+var deck=document.getElementById("deck"), order=mixedOrder(), current=null, demoRedraw=false;
+function renderDeck(picked){
+  deck.innerHTML=order.map(function(c,i){
+    var isP=picked===c.k;
+    return '<button type="button" class="tarot t-'+c.c+(picked?(isP?' flip pick':' dim'):'')+'" data-k="'+c.k+'"'+(picked?' disabled':'')+' aria-label="'+(picked?(isP?'已抽到：'+c.n:'未選的牌'):'第 '+(i+1)+' 張牌，點擊翻開')+'">'
+      +'<span class="in"><span class="face back"><span>?</span><b>Meibao</b></span><span class="face front"><small>今日項目</small><b>'+esc(c.n)+'</b></span></span></button>';
+  }).join("");
+  deck.querySelectorAll(".tarot").forEach(function(b){ b.onclick=function(){ pick(b.getAttribute("data-k")); }; });
+}
+function pick(k){
+  var list=RES[k], res=list[Math.floor(Math.random()*list.length)];
+  var record=!demoRedraw;
+  current={card:k,res:res};
+  if(record){ store("meibao_draw",JSON.stringify({d:today(),card:k,r:res.r})); sendDraw(k,res.r); }
+  renderDeck(k);
+  setTimeout(function(){ showResult(k,res,!record); },record?650:0);
+}
+function showResult(k,res,isDemo){
+  var box=document.getElementById("result"); box.hidden=false;
+  var rc=document.getElementById("rCat"); rc.className="rcat t-"+colorOf(k); rc.textContent="今日推薦：「"+nameOf(k)+"」";
+  var st=""; for(var i=1;i<=5;i++) st+=starSvg(i<=res.s);
+  var sEl=document.getElementById("rStars"); sEl.innerHTML=st; sEl.setAttribute("aria-label","運勢 "+res.s+" 顆星（滿分 5 顆）");
+  document.getElementById("rTitle").textContent=res.t;
+  document.getElementById("rLine").textContent=res.l;
+  document.getElementById("rTip").textContent=res.tip;
+  document.getElementById("rColor").textContent=res.c;
+  document.getElementById("rTime").textContent=res.tm;
+  document.getElementById("goBtn").textContent="去美寶找"+nameOf(k)+"店家";
+  document.getElementById("doneNote").textContent=isDemo?"這次是示範重抽，不會計入統計。":"今天的運勢已抽完，明天再來抽一次。";
+  document.getElementById("redo").hidden=false;
+  document.getElementById("deckHint").textContent="今天已抽過了，結果在下方。";
+  drawShare();
+  box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+}
+document.getElementById("redo").onclick=function(){
+  demoRedraw=true; current=null; order=mixedOrder(); renderDeck(null);
+  document.getElementById("result").hidden=true;
+  document.getElementById("deckHint").textContent="示範重抽：這次不會計入統計。";
+  document.getElementById("deck").scrollIntoView({block:"center"});
+};
+
+/* ---------- 分享圖 ---------- */
+var cv=document.createElement("canvas"); cv.width=1080; cv.height=1350;
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function wrapT(ctx,text,maxW,maxLines){
+  var lines=[],line="";
+  for(var i=0;i<text.length;i++){ var t=line+text[i]; if(ctx.measureText(t).width>maxW&&line){ lines.push(line); line=text[i]; if(lines.length===maxLines) break; } else line=t; }
+  if(lines.length<maxLines&&line) lines.push(line);
+  return lines;
+}
+function starPath(ctx,cx,cy,R){ ctx.beginPath(); for(var i=0;i<10;i++){ var r=i%2?R*.42:R, a=-Math.PI/2+i*Math.PI/5; var x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r; if(i) ctx.lineTo(x,y); else ctx.moveTo(x,y); } ctx.closePath(); }
+var seq=0;
+function paint(){
+  if(!current) return;
+  var res=current.res, ctx=cv.getContext("2d"), W=1080,H=1350,M=84,F='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.clearRect(0,0,W,H); ctx.fillStyle="#FFDCF0"; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.globalAlpha=.6; ctx.filter="blur(70px)"; ctx.fillStyle="#E9DBFF"; ctx.beginPath(); ctx.arc(W-100,260,260,0,7); ctx.fill(); ctx.restore();
+  ctx.textBaseline="alphabetic"; ctx.textAlign="left";
+  var y=M+36;
+  ctx.fillStyle="#141414"; ctx.font="900 36px "+F; ctx.fillText("Meibao 美寶 · 今日美業運勢",M,y);
+  ctx.fillStyle="#5E5A5C"; ctx.font="500 30px "+F; ctx.fillText(today().replace(/-/g," / "),M,y+50);
+  y+=50+44;
+  var cat="今日推薦：「"+nameOf(current.card)+"」"; ctx.font="700 38px "+F; var cw=ctx.measureText(cat).width+60;
+  var hx=HEX[colorOf(current.card)];
+  rr(ctx,M,y,cw,66,33); ctx.fillStyle=hx[0]; ctx.fill(); ctx.fillStyle=hx[1]; ctx.fillText(cat,M+30,y+46);
+  y+=66+64;
+  for(var i=0;i<5;i++){ starPath(ctx,M+30+i*68,y,28); ctx.fillStyle=i<res.s?"#FF3AB1":"rgba(255,255,255,.9)"; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle="#141414"; ctx.stroke(); }
+  y+=28+120;
+  ctx.fillStyle="#141414"; ctx.font="900 112px "+F;
+  wrapT(ctx,res.t,W-M*2,1).forEach(function(l){ ctx.fillText(l,M,y); });
+  y+=84;
+  ctx.fillStyle="#3A3638"; ctx.font="500 44px "+F;
+  wrapT(ctx,res.l,W-M*2,3).forEach(function(l){ ctx.fillText(l,M,y); y+=64; });
+  y+=4;
+  var items=[["今日建議",res.tip],["幸運色",res.c],["好時段",res.tm]];
+  rr(ctx,M,y,W-M*2,items.length*70+36,32); ctx.fillStyle="#FFFFFF"; ctx.fill();
+  var py=y+70;
+  items.forEach(function(it){ ctx.textAlign="left"; ctx.fillStyle="#FF3AB1"; ctx.font="900 32px "+F; ctx.fillText(it[0],M+40,py); ctx.fillStyle="#141414"; ctx.font="700 36px "+F; ctx.fillText(it[1],M+230,py); py+=70; });
+  var qs=190,qx=W-M-qs,qy=H-M-qs;
+  rr(ctx,qx-14,qy-14,qs+28,qs+28,24); ctx.fillStyle="#FFFFFF"; ctx.fill();
+  var mat=QR.make(SITE),n=mat.length,cell=qs/(n+2); ctx.fillStyle="#141414";
+  for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(mat[r][c]) ctx.fillRect(Math.round(qx+(c+1)*cell),Math.round(qy+(r+1)*cell),Math.ceil(cell),Math.ceil(cell));
+  ctx.fillStyle="#141414"; ctx.font="900 42px "+F; ctx.fillText("掃描找"+nameOf(current.card)+"店家",M,H-M-60);
+  ctx.fillStyle="#FF3AB1"; ctx.font="700 36px "+F; ctx.fillText("meibao.com.tw",M,H-M-10);
+  document.getElementById("shareImg").src=cv.toDataURL("image/png");
+}
+function drawShare(){
+  var my=++seq, txt="Meibao 美寶 · 今日美業運勢今日推薦：「」今日建議幸運色好時段掃描找店家0123456789 / "+(current?current.res.t+current.res.l+current.res.tip+current.res.c+current.res.tm:"");
+  var p; try{ p=Promise.all(["900","700","500"].map(function(w){ return document.fonts.load(w+' 40px "Noto Sans TC"',txt); })); }catch(e){ p=Promise.resolve(); }
+  p.catch(function(){}).then(function(){ if(my===seq) paint(); });
+}
+var toastT; function say(m){ var e=document.getElementById("toast"); e.textContent=m; clearTimeout(toastT); toastT=setTimeout(function(){ e.textContent=""; },3500); }
+document.getElementById("dlBtn").onclick=function(){
+  try{
+    cv.toBlob(function(b){ var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="今日美業運勢.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },2000); say("已開始下載；若沒有反應，請長按圖片儲存。"); });
+  }catch(e){ say("無法自動下載，請長按圖片儲存。"); }
+};
+
+/* ---------- Supabase：寫入與統計 ---------- */
+function sb(path,opts){
+  var ctl=("AbortController" in window)?new AbortController():null, to=setTimeout(function(){ if(ctl) ctl.abort(); },6000);
+  opts=opts||{}; opts.headers={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"};
+  if(ctl) opts.signal=ctl.signal;
+  return fetch(SB_URL+path,opts).then(function(r){ clearTimeout(to); if(!r.ok) throw new Error("http "+r.status); return r; });
+}
+function sendDraw(k,rk){
+  var h={Prefer:"return=minimal"};
+  sb("/rest/v1/draws",{method:"POST",body:JSON.stringify({card_key:k,result_key:rk}),headers:h}).then(function(){ return loadStats(); }).catch(function(){});
+}
+var DEMO_STATS={nail:42,lash:35,hair:28,massage:22,skin:19,tattoo:12};
+function renderStats(map,live){
+  var max=Math.max.apply(null,CARDS.map(function(c){ return map[c.k]||0; }).concat([1]));
+  document.getElementById("bars").innerHTML=CARDS.slice().sort(function(a,b){ return (map[b.k]||0)-(map[a.k]||0); }).map(function(c){
+    var n=map[c.k]||0;
+    return '<li class="bar t-'+c.c+'"><span>'+esc(c.n)+'</span><span class="track"><span class="fill" style="display:block;width:'+Math.round(n/max*100)+'%"></span></span><span class="n">'+n+'</span></li>';
+  }).join("");
+  var p=document.getElementById("stPill"); p.textContent=live?"即時資料":"示範數字"; p.className="pill"+(live?" live":"");
+  document.getElementById("stHint").textContent=live?"最近 7 天各項目被抽到的次數。":"目前無法連線，以下是示範數字，連線後會顯示真實統計。";
+}
+function loadStats(){
+  return sb("/rest/v1/rpc/draw_stats",{method:"POST",body:JSON.stringify({days:7})}).then(function(r){ return r.json(); }).then(function(rows){
+    var m={}; rows.forEach(function(x){ m[x.card_key]=Number(x.n); }); renderStats(m,true);
+  }).catch(function(){ renderStats(DEMO_STATS,false); });
+}
+
+/* ---------- 啟動：今天抽過就直接顯示結果 ---------- */
+var saved=null; try{ saved=JSON.parse(store("meibao_draw")||"null"); }catch(e){}
+if(saved&&saved.d===today()&&RES[saved.card]){
+  current={card:saved.card,res:find(saved.card,saved.r)};
+  renderDeck(saved.card); showResult(saved.card,current.res,false);
+} else renderDeck(null);
+renderStats(DEMO_STATS,false); loadStats();
+</script>
+</body>
+</html>
