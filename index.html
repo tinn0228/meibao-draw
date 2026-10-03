@@ -148,7 +148,7 @@ h1 em{font-style:normal;color:var(--pink)}
     </div>
     <div class="coupon" id="coupon" hidden>
       <div class="coupon-l">你的優惠代碼</div>
-      <div class="coupon-row"><code id="couponCode">meibao1004</code><button class="btn main" id="copyBtn" type="button">複製代碼</button></div>
+      <div class="coupon-row"><code id="couponCode"></code><button class="btn main" id="copyBtn" type="button">複製代碼</button></div>
       <div class="coupon-s" id="couponMsg" role="status"></div>
     </div>
     <div class="toast" id="toast" role="status"></div>
@@ -253,6 +253,7 @@ try{ document.getElementById("qrBox").innerHTML=QR.svg(SITE); }catch(e){ documen
 
 /* ---------- 牌組與結果 ---------- */
 var CARDS=[{k:"nail",n:"美甲",c:"pink"},{k:"lash",n:"美睫",c:"green"},{k:"tattoo",n:"霧眉",c:"purple"},{k:"massage",n:"除毛",c:"pink"},{k:"skin",n:"美容",c:"green"},{k:"hair",n:"美髮",c:"purple"}];
+var COUPONS={nail:"nail_meibao",lash:"eye_meibao",tattoo:"brow_meibao",massage:"meibao88",skin:"face_meibao",hair:"hair_meibao"};
 var HEX={pink:["#FF3AB1","#FFFFFF"],green:["#3CCB95","#0F2A20"],purple:["#8B5CF6","#FFFFFF"]};
 function colorOf(k){ return CARDS.filter(function(c){ return c.k===k; })[0].c; }
 var RES={
@@ -392,12 +393,12 @@ function drawShare(){
 }
 var toastT; function say(m){ var e=document.getElementById("toast"); e.textContent=m; clearTimeout(toastT); toastT=setTimeout(function(){ e.textContent=""; },3500); }
 document.getElementById("couponBtn").onclick=function(){
-  var c=document.getElementById("coupon"); c.hidden=false; c.scrollIntoView({block:"nearest"});
+  var c=document.getElementById("coupon"); document.getElementById("couponCode").textContent=(current&&COUPONS[current.card])||""; c.hidden=false; c.scrollIntoView({block:"nearest"});
 };
 document.getElementById("copyBtn").onclick=function(){
-  var code="meibao1004", m=document.getElementById("couponMsg");
+  var code=document.getElementById("couponCode").textContent, m=document.getElementById("couponMsg");
   function fb(){ var r=document.createRange(); r.selectNodeContents(document.getElementById("couponCode")); var s=getSelection(); s.removeAllRanges(); s.addRange(r); m.textContent="已選取代碼，請按「複製」。"; }
-  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(function(){ m.textContent="已複製代碼 meibao1004"; },fb); } else fb();
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(function(){ m.textContent="已複製代碼 "+code; },fb); } else fb();
 };
 document.getElementById("dlBtn").onclick=function(){
   try{
