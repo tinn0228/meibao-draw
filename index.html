@@ -89,6 +89,12 @@ h1 em{font-style:normal;color:var(--pink)}
 .note{font-size:13px;color:var(--ink-soft);margin:0}
 .toast{font-size:13px;font-weight:700;color:var(--pink);min-height:1.4em}
 
+.coupon{border:1.5px dashed var(--line);border-radius:18px;padding:14px 16px;background:var(--pink-soft);display:flex;flex-direction:column;gap:8px}
+.coupon[hidden]{display:none}
+.coupon-l{font-size:13px;font-weight:700;color:var(--ink-soft)}
+.coupon-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.coupon code{font-family:ui-monospace,Consolas,monospace;font-size:26px;font-weight:900;letter-spacing:.04em;user-select:all}
+.coupon-s{font-size:13px;font-weight:700;color:var(--ink-soft);min-height:1.2em}
 .bars{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
 .bar{display:grid;grid-template-columns:3.2em minmax(0,1fr) 3em;gap:10px;align-items:center;font-variant-numeric:tabular-nums}
 .bar span:first-child{font-weight:700}
@@ -137,7 +143,13 @@ h1 em{font-style:normal;color:var(--pink)}
     <img class="share-img" id="shareImg" alt="今日運勢分享圖">
     <div class="actions">
       <button class="btn main" id="dlBtn" type="button">下載分享圖</button>
+      <button class="btn" id="couponBtn" type="button">領取折扣</button>
       <a class="btn" id="goBtn" href="https://meibao.com.tw/" target="_blank" rel="noopener">去美寶找店家</a>
+    </div>
+    <div class="coupon" id="coupon" hidden>
+      <div class="coupon-l">你的優惠代碼</div>
+      <div class="coupon-row"><code id="couponCode">meibao1004</code><button class="btn main" id="copyBtn" type="button">複製代碼</button></div>
+      <div class="coupon-s" id="couponMsg" role="status"></div>
     </div>
     <div class="toast" id="toast" role="status"></div>
     <p class="note" id="doneNote"></p>
@@ -240,7 +252,7 @@ var QR=(function(){
 try{ document.getElementById("qrBox").innerHTML=QR.svg(SITE); }catch(e){ document.getElementById("qrBox").textContent="meibao.com.tw"; }
 
 /* ---------- 牌組與結果 ---------- */
-var CARDS=[{k:"nail",n:"美甲",c:"pink"},{k:"lash",n:"美睫",c:"green"},{k:"tattoo",n:"紋繡",c:"purple"},{k:"hair",n:"美髮",c:"pink"},{k:"skin",n:"護膚",c:"green"},{k:"massage",n:"按摩",c:"purple"}];
+var CARDS=[{k:"nail",n:"美甲",c:"pink"},{k:"lash",n:"美睫",c:"green"},{k:"tattoo",n:"霧眉",c:"purple"},{k:"massage",n:"除毛",c:"pink"},{k:"skin",n:"美容",c:"green"},{k:"hair",n:"美髮",c:"purple"}];
 var HEX={pink:["#FF3AB1","#FFFFFF"],green:["#3CCB95","#0F2A20"],purple:["#8B5CF6","#FFFFFF"]};
 function colorOf(k){ return CARDS.filter(function(c){ return c.k===k; })[0].c; }
 var RES={
@@ -270,10 +282,10 @@ var RES={
   {r:"skin3",s:5,t:"放鬆充電",l:"忙了一陣子，今天很適合替自己充電。",tip:"選有按摩放鬆的療程",c:"薄荷綠",tm:"週末午後"},
   {r:"skin4",s:4,t:"重整步調",l:"重新安排生活節奏，從照顧自己開始。",tip:"把保養排進行事曆",c:"淡紫",tm:"晚上 8 點"}],
  massage:[
-  {r:"massage1",s:5,t:"放下肩上的事",l:"今天值得讓自己整個人鬆下來，把忙碌留在門外。",tip:"預約一段完整不趕的時間",c:"燕麥色",tm:"傍晚 6 點"},
-  {r:"massage2",s:4,t:"慢慢呼吸",l:"節奏放慢一點，好心情會跟著跑出來。",tip:"選你喜歡的香氣與力道",c:"薄荷綠",tm:"晚上 8 點"},
-  {r:"massage3",s:3,t:"小小犒賞",l:"不用大陣仗，三十分鐘的放鬆就很夠。",tip:"先從短時間的療程開始",c:"淺杏",tm:"平日午後"},
-  {r:"massage4",s:5,t:"充電時刻",l:"這個週末很適合安排一次放鬆，替下週備好力氣。",tip:"和朋友一起預約更開心",c:"薰衣草紫",tm:"週末上午"}]
+  {r:"wax1",s:5,t:"清清爽爽出門",l:"今天適合讓自己輕盈清爽，換季前先處理好，心情也跟著輕鬆。",tip:"預約前先確認注意事項",c:"珍珠白",tm:"下午 2 點"},
+  {r:"wax2",s:4,t:"提前準備更安心",l:"重要場合前幾天先約好，時間充裕就不用慌。",tip:"活動前一週預約",c:"淺杏",tm:"平日午後"},
+  {r:"wax3",s:3,t:"溫柔對待自己",l:"不用一次到位，選一個自己舒服的節奏，慢慢來就好。",tip:"先從小範圍開始",c:"薄荷綠",tm:"傍晚 6 點"},
+  {r:"wax4",s:5,t:"俐落新氣象",l:"今天的你適合換個清爽的狀態，自信從細節開始。",tip:"和美容師聊聊你的需求與疑問",c:"玫瑰粉",tm:"週末上午"}]
 };
 function nameOf(k){ return CARDS.filter(function(c){ return c.k===k; })[0].n; }
 function find(card,rk){ var l=RES[card]; for(var i=0;i<l.length;i++) if(l[i].r===rk) return l[i]; return l[0]; }
@@ -317,6 +329,7 @@ function showResult(k,res,isDemo){
   document.getElementById("doneNote").textContent=isDemo?"這次是示範重抽，不會計入統計。":"今天的運勢已抽完，明天再來抽一次。";
   document.getElementById("redo").hidden=false;
   document.getElementById("deckHint").textContent="今天已抽過了，結果在下方。";
+  document.getElementById("coupon").hidden=true; document.getElementById("couponMsg").textContent="";
   drawShare();
   box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
 }
@@ -378,6 +391,14 @@ function drawShare(){
   p.catch(function(){}).then(function(){ if(my===seq) paint(); });
 }
 var toastT; function say(m){ var e=document.getElementById("toast"); e.textContent=m; clearTimeout(toastT); toastT=setTimeout(function(){ e.textContent=""; },3500); }
+document.getElementById("couponBtn").onclick=function(){
+  var c=document.getElementById("coupon"); c.hidden=false; c.scrollIntoView({block:"nearest"});
+};
+document.getElementById("copyBtn").onclick=function(){
+  var code="meibao1004", m=document.getElementById("couponMsg");
+  function fb(){ var r=document.createRange(); r.selectNodeContents(document.getElementById("couponCode")); var s=getSelection(); s.removeAllRanges(); s.addRange(r); m.textContent="已選取代碼，請按「複製」。"; }
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(function(){ m.textContent="已複製代碼 meibao1004"; },fb); } else fb();
+};
 document.getElementById("dlBtn").onclick=function(){
   try{
     cv.toBlob(function(b){ var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="今日美業運勢.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },2000); say("已開始下載；若沒有反應，請長按圖片儲存。"); });
